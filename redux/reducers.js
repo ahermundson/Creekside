@@ -1,0 +1,63 @@
+import { combineReducers } from 'redux';
+import {
+  ADD_USER_INFO,
+  PUNCH_IN,
+  PUNCH_OUT,
+  SET_USER_TIMECLOCK
+} from './actions';
+
+const userInfo = (state = {}, action) => {
+  if (action.type === ADD_USER_INFO) {
+    return Object.assign(action.payload, { isAuthenticated: true });
+  }
+  return state;
+};
+
+const timeClock = (state = [], action) => {
+  switch (action.type) {
+    case PUNCH_IN:
+      return [
+        ...state,
+        {
+          userId: action.payload.userId,
+          activeTimeClock: true,
+          punchInTime: action.payload.time,
+          locationId: action.payload.locationId,
+          timeClockId: action.payload.timeClockId
+        }
+      ];
+    case PUNCH_OUT:
+      return state.map(timeClockItem => {
+        if (
+          timeClockItem.userId !== action.payload.userId &&
+          timeClockItem.activeTimeClock
+        ) {
+          return timeClockItem;
+        }
+        return {
+          userId: action.payload.userId,
+          activeTimeClock: false,
+          punchInTime: timeClock.punchInTime,
+          locationId: timeClock.locationId,
+          timeClockId: timeClockItem.timeClockId,
+          punchOutTime: action.payload.punchOutTime
+        };
+      });
+    case SET_USER_TIMECLOCK:
+      return [
+        {
+          userId: action.payload.user_id,
+          activeTimeClock: true,
+          punchInTime: action.payload.punched_in,
+          locationId: action.payload.location_id,
+          timeClockId: action.payload._id
+        }
+      ];
+    default:
+      return state;
+  }
+};
+
+const rootReducer = combineReducers({ userInfo, timeClock });
+
+export default rootReducer;
