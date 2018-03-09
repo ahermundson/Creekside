@@ -3,7 +3,9 @@ import {
   ADD_USER_INFO,
   PUNCH_IN,
   PUNCH_OUT,
-  SET_USER_TIMECLOCK
+  SET_USER_TIMECLOCK,
+  START_JOB,
+  FINISH_JOB
 } from './actions';
 
 const userInfo = (state = {}, action) => {
@@ -58,6 +60,32 @@ const timeClock = (state = [], action) => {
   }
 };
 
-const rootReducer = combineReducers({ userInfo, timeClock });
+const jobClock = (state = [], action) => {
+  switch (action.type) {
+    case START_JOB:
+      return [...state, ...action.payload];
+    case FINISH_JOB:
+      return state.map(jobClockItem => {
+        if (
+          jobClockItem.userId !== action.payload.userId &&
+          !jobClockItem.activeJob
+        ) {
+          return jobClockItem;
+        }
+        return {
+          userId: action.payload.userId,
+          active_job: false,
+          jobStartedTime: jobClockItem.jobStartedTime,
+          locationId: jobClockItem.locationId,
+          jobClockId: jobClockItem.jobClockId,
+          jobFinishedTime: action.payload.jobFinishedTime
+        };
+      });
+    default:
+      return state;
+  }
+};
+
+const rootReducer = combineReducers({ userInfo, timeClock, jobClock });
 
 export default rootReducer;

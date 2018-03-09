@@ -9,6 +9,7 @@ const jwt = require('jsonwebtoken');
 // const cors = require('cors');
 
 // const User = require('./models/user-model');
+const JobClock = require('./models/jobclock-model');
 const TimeClock = require('./models/timeclock-model');
 const Location = require('./models/location-model');
 const User = require('./models/user-model');
@@ -114,6 +115,40 @@ app.put('/timeClockUpdate', (req, res) => {
   TimeClock.findOneAndUpdate(
     { user_id: req.body.userId, active_timeclock: true },
     { $set: { punched_out: req.body.punchOutTime, active_timeclock: false } },
+    err => {
+      if (err) {
+        console.log('Put ERR: ', err);
+        res.sendStatus(500);
+      } else {
+        res.sendStatus(200);
+      }
+    }
+  );
+});
+
+app.post('/jobclock', (req, res) => {
+  console.log(req.body);
+  const jobClockToAdd = new JobClock({
+    job_started: req.body.job_started,
+    user_id: req.body.user_id,
+    active_job: true,
+    location_id: req.body.location_id
+  });
+
+  jobClockToAdd.save((err, data) => {
+    if (err) {
+      console.log('Error: ', err);
+      res.sendStatus(500);
+    } else {
+      res.send(data);
+    }
+  });
+});
+
+app.put('/jobClockUpdate', (req, res) => {
+  JobClock.findOneAndUpdate(
+    { user_id: req.body.userId, active_job: true },
+    { $set: { job_finished: req.body.job_finished, active_job: false } },
     err => {
       if (err) {
         console.log('Put ERR: ', err);

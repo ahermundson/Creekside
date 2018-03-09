@@ -228,7 +228,7 @@ class Admin extends Component {
           onRequestClose={this.handleRequestCloseNewUser}
         />
         <LandingHeader>
-          <h1 style={{ marginLeft: '15px' }}>Creekside TimeClock</h1>
+          <h1 style={{ marginLeft: '15px' }}>Creekside Lawn & Landscape</h1>
           <Link to="/">
             <RaisedButton style={{ marginRight: '15px' }}>Home</RaisedButton>
           </Link>

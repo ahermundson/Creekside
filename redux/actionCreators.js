@@ -6,7 +6,9 @@ import {
   PUNCH_IN,
   PUNCH_OUT,
   SET_USER_TIMECLOCK,
-  GET_USER_TIMECLOCK_DATA
+  GET_USER_TIMECLOCK_DATA,
+  START_JOB,
+  FINISH_JOB
 } from './actions';
 
 // const serverAddress =
@@ -48,7 +50,6 @@ export function punchInDispatch(userId, time, locationId, timeClockId) {
 }
 
 export function punchIn(userId, time, locationId) {
-  console.log(time.toString());
   return dispatch => {
     axios
       .post(`${serverAddress}/timeclock`, {
@@ -73,13 +74,48 @@ export function punchIn(userId, time, locationId) {
   };
 }
 
-export function punchOutDispatch(userId, punchOutTime) {
+export function startJobDispatch(
+  userId,
+  jobStartedTime,
+  locationId,
+  jobClockId,
+  activeJob
+) {
   return {
-    type: PUNCH_OUT,
+    type: START_JOB,
     payload: {
       userId,
-      punchOutTime
+      jobStartedTime,
+      locationId,
+      jobClockId,
+      activeJob
     }
+  };
+}
+
+export function startJob(userId, jobStartedTime, locationId) {
+  return dispatch => {
+    axios
+      .post(`${serverAddress}/jobclock`, {
+        job_started: jobStartedTime.toString(),
+        active_job: true,
+        user_id: userId,
+        location_id: locationId
+      })
+      .then(response => {
+        dispatch(
+          startJobDispatch(
+            userId,
+            jobStartedTime.toString(),
+            locationId,
+            response.data._id,
+            true
+          )
+        );
+      })
+      .catch(error => {
+        console.error('Error punching in', error);
+      });
   };
 }
 
@@ -87,6 +123,39 @@ export function setUserTimeClock(timeClockObj) {
   return {
     type: SET_USER_TIMECLOCK,
     payload: timeClockObj
+  };
+}
+
+export function jobFinishedDispatch(userId, jobFinishedTime) {
+  return {
+    type: FINISH_JOB,
+    payload: {
+      userId,
+      jobFinishedTime
+    }
+  };
+}
+
+export function finishJob(userId) {
+  return dispatch => {
+    axios
+      .put(`${serverAddress}/jobClockUpdate`, {
+        userId: userId,
+        job_finished: new Date().toString()
+      })
+      .then(response => {
+        dispatch(jobFinishedDispatch(userId, new Date().toString()));
+      });
+  };
+}
+
+export function punchOutDispatch(userId, punchOutTime) {
+  return {
+    type: PUNCH_OUT,
+    payload: {
+      userId,
+      punchOutTime
+    }
   };
 }
 

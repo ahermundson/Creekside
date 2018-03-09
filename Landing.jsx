@@ -2,13 +2,19 @@ import React, { Component } from 'react';
 import { isEmpty } from 'lodash';
 import styled from 'styled-components';
 import RaisedButton from 'material-ui/RaisedButton';
-// import SelectField from 'material-ui/SelectField';
-// import MenuItem from 'material-ui/MenuItem';
-// import axios from 'axios';
+import SelectField from 'material-ui/SelectField';
+import MenuItem from 'material-ui/MenuItem';
+import axios from 'axios';
 import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
 import PropTypes from 'prop-types';
-import { getUserInfo, punchIn, punchOut } from './redux/actionCreators';
+import {
+  getUserInfo,
+  punchIn,
+  punchOut,
+  startJob,
+  finishJob
+} from './redux/actionCreators';
 import Auth from './Auth/Auth';
 
 const jwt = require('jsonwebtoken');
@@ -16,7 +22,7 @@ const jwt = require('jsonwebtoken');
 
 // const serverAddress =
 //   'http://helloworld-hermundson.us-east-2.elasticbeanstalk.com';
-// const serverAddress = '/api';
+const serverAddress = '/api';
 
 const LandingContainer = styled.div`
   display: flex;
@@ -44,7 +50,8 @@ const LandingHeader = styled.div`
 
 const styles = {
   main: {
-    width: '50%'
+    width: '50%',
+    marginTop: '1em'
   },
   button: {
     height: '100px',
@@ -77,9 +84,9 @@ class Landing extends Component {
     this.onPunchOutClick = this.onPunchOutClick.bind(this);
     this.setSession = this.setSession.bind(this);
     this.handleLocationChange = this.handleLocationChange.bind(this);
+    this.onStartJobClick = this.onStartJobClick.bind(this);
+    this.onFinishJobClick = this.onFinishJobClick.bind(this);
     this.state = {
-      punchInTime: null,
-      punchOutTime: null,
       selectedLocation: null
     };
     if (window.location.hash.includes('#access_token')) {
@@ -116,18 +123,18 @@ class Landing extends Component {
         this.props.getUserInfo(decoded.email);
       }
     }
-    // axios.get(`${serverAddress}/location`).then(response => {
-    //   const locationMenuItems = response.data.map(location => (
-    //     <MenuItem
-    //       key={location._id}
-    //       value={location._id}
-    //       primaryText={`${location.type} - ${location.propertyName}`}
-    //     />
-    //   ));
-    //   this.setState({
-    //     locationMenuItems
-    //   });
-    // });
+    axios.get(`${serverAddress}/location`).then(response => {
+      const locationMenuItems = response.data.map(location => (
+        <MenuItem
+          key={location._id}
+          value={location._id}
+          primaryText={`${location.type} - ${location.propertyName}`}
+        />
+      ));
+      this.setState({
+        locationMenuItems
+      });
+    });
   }
 
   onPunchInClick() {
@@ -140,6 +147,21 @@ class Landing extends Component {
 
   onPunchOutClick() {
     this.props.punchOut(this.props.userInfo._id);
+  }
+
+  onStartJobClick() {
+    this.props.startJob(
+      this.props.userInfo._id,
+      new Date(),
+      this.state.selectedLocation
+    );
+    this.setState({
+      selectedLocation: null
+    });
+  }
+
+  onFinishJobClick() {
+    this.props.finishJob(this.props.userInfo._id);
   }
 
   setSession(authResult) {
@@ -162,7 +184,7 @@ class Landing extends Component {
     return (
       <div style={{ height: '80vh' }}>
         <LandingHeader>
-          <h1 style={{ marginLeft: '15px' }}>Creekside Time Clock</h1>
+          <h1 style={{ marginLeft: '15px' }}>Creekside Lawn & Landscape</h1>
           {this.props.userInfo.isAdmin ? (
             <Link to="/admin">
               <RaisedButton style={{ marginRight: '15px' }}>Admin</RaisedButton>
@@ -210,9 +232,40 @@ class Landing extends Component {
                 flexDirection: 'column',
                 alignItems: 'center'
               }}>
-              <h3>{`Welcome ${this.props.userInfo.first_name} ${
+              <h3
+                style={{
+                  color: 'white',
+                  fontFamily: 'Roboto, sans-serif'
+                }}>{`Welcome ${this.props.userInfo.first_name} ${
                 this.props.userInfo.last_name
               }`}</h3>
+              <SelectField
+                disabled={this.props.activeJob}
+                labelStyle={{ color: 'white' }}
+                selectedMenuItemStyle={{ color: 'tan' }}
+                value={this.state.selectedLocation}
+                floatingLabelText="Select Job Location"
+                floatingLabelStyle={{ color: 'white' }}
+                onChange={this.handleLocationChange}>
+                {this.state.locationMenuItems}
+              </SelectField>
+              {!this.props.activeJob ? (
+                <RaisedButton
+                  label="Start Job"
+                  style={styles.main}
+                  buttonStyle={styles.button}
+                  labelStyle={styles.buttonLabel}
+                  onClick={this.onStartJobClick}
+                />
+              ) : (
+                <RaisedButton
+                  label="Finish Job"
+                  style={styles.main}
+                  buttonStyle={styles.button}
+                  labelStyle={styles.buttonLabel}
+                  onClick={this.onFinishJobClick}
+                />
+              )}
               <RaisedButton
                 label="Punch Out"
                 style={styles.main}
@@ -222,19 +275,6 @@ class Landing extends Component {
               />
             </div>
           ) : null}
-          <div>
-            {this.state.punchInTime ? (
-              <h6>
-                Clocked in at: {this.state.punchInTime.toLocaleTimeString()}
-              </h6>
-            ) : null}
-
-            {this.state.punchOutTime ? (
-              <h6>
-                Clocked out at: {this.state.punchOutTime.toLocaleTimeString()}
-              </h6>
-            ) : null}
-          </div>
         </LandingContainer>
       </div>
     );
@@ -245,7 +285,8 @@ const mapStateToProps = state => ({
   userInfo: state.userInfo,
   activeTimeClock: !isEmpty(
     state.timeClock.find(timeClock => timeClock.activeTimeClock)
-  )
+  ),
+  activeJob: !isEmpty(state.jobClock.find(jobClock => jobClock.activeJob))
 });
 
 const mapDispatchToProps = dispatch => ({
@@ -257,6 +298,12 @@ const mapDispatchToProps = dispatch => ({
   },
   punchOut(userId) {
     dispatch(punchOut(userId));
+  },
+  startJob(userId, time, location) {
+    dispatch(startJob(userId, time, location));
+  },
+  finishJob(userId) {
+    dispatch(finishJob(userId));
   }
 });
 
@@ -266,6 +313,8 @@ Landing.propTypes = {
   getUserInfo: PropTypes.func.isRequired,
   punchIn: PropTypes.func.isRequired,
   punchOut: PropTypes.func.isRequired,
+  startJob: PropTypes.func.isRequired,
+  finishJob: PropTypes.func.isRequired,
   userInfo: PropTypes.shape({
     _id: PropTypes.string,
     email: PropTypes.string,
@@ -274,10 +323,12 @@ Landing.propTypes = {
     isAdmin: PropTypes.bool,
     isAuthenticated: PropTypes.bool
   }),
-  activeTimeClock: PropTypes.bool
+  activeTimeClock: PropTypes.bool,
+  activeJob: PropTypes.bool
 };
 
 Landing.defaultProps = {
   userInfo: {},
-  activeTimeClock: false
+  activeTimeClock: false,
+  activeJob: false
 };
