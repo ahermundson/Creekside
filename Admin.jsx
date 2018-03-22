@@ -7,6 +7,7 @@ import RaisedButton from 'material-ui/RaisedButton';
 import Snackbar from 'material-ui/Snackbar';
 import { Tabs, Tab } from 'material-ui/Tabs';
 import TextField from 'material-ui/TextField';
+import FlatButton from 'material-ui/FlatButton';
 import {
   Table,
   TableBody,
@@ -15,7 +16,11 @@ import {
   TableRow,
   TableRowColumn
 } from 'material-ui/Table';
+import Dialog from 'material-ui/Dialog';
+import TimePicker from 'material-ui/TimePicker';
 import * as moment from 'moment';
+import Delete from 'material-ui/svg-icons/action/delete';
+import Edit from 'material-ui/svg-icons/content/create';
 import { CSVLink } from 'react-csv';
 
 // const serverAddress =
@@ -24,14 +29,13 @@ const serverAddress = '/api';
 
 const LandingHeader = styled.div`
   height: 15%;
-  background-color: #1b5e20;
+  background-color: #630012;
   width: 100%;
   color: white;
   display: flex;
   align-items: center;
   justify-content: space-between;
   font-family: Roboto, sans-serif;
-  padding: 5px;
 
   @media (max-width: 700px) {
     height: 5%;
@@ -49,10 +53,15 @@ class Admin extends Component {
       selectedRows: [],
       open: false,
       openNewUser: false,
-      newUser: {}
+      newUser: {},
+      openDialog: false,
+      employeeEditDate: null
     };
     this.handleStartDateChange = this.handleStartDateChange.bind(this);
     this.handleEndDateChange = this.handleEndDateChange.bind(this);
+    this.handleEmployeeEditDateChange = this.handleEmployeeEditDateChange.bind(
+      this
+    );
     this.onRunTimeClockReportClick = this.onRunTimeClockReportClick.bind(this);
     this.handleRowSelection = this.handleRowSelection.bind(this);
     this.isSelected = this.isSelected.bind(this);
@@ -65,6 +74,13 @@ class Admin extends Component {
       this
     );
     this.onNewUserSubmit = this.onNewUserSubmit.bind(this);
+    this.openDialog = this.openDialog.bind(this);
+    this.closeDialog = this.closeDialog.bind(this);
+    this.handlePunchedInTimeChange = this.handlePunchedInTimeChange.bind(this);
+    this.handlePunchedOutTimeChange = this.handlePunchedOutTimeChange.bind(
+      this
+    );
+    this.updateTimeClock = this.updateTimeClock.bind(this);
   }
 
   componentDidMount() {
@@ -126,7 +142,7 @@ class Admin extends Component {
 
   onNewUserSubmit() {
     axios
-      .post('/api/user', {
+      .post(`${serverAddress}/user`, {
         newUser: this.state.newUser
       })
       .then(response =>
@@ -193,6 +209,31 @@ class Admin extends Component {
     });
   }
 
+  handleEmployeeEditDateChange(e, date) {
+    this.setState({
+      employeeEditDate: date
+    });
+    axios
+      .get(`${serverAddress}/singleTimeClock`, {
+        params: {
+          date: date.toString(),
+          userId: this.state.selectedUser._id
+        }
+      })
+      .then(response => {
+        if (response.data.length) {
+          this.setState(
+            {
+              punched_in: moment(response.data[0].punched_in).toDate(),
+              punched_out: moment(response.data[0].punched_in).toDate(),
+              timeClockID: response.data[0]._id
+            },
+            () => console.log(this.state)
+          );
+        }
+      });
+  }
+
   isSelected = id =>
     this.state.selectedRows.map(user => user._id).indexOf(id) !== -1;
 
@@ -206,11 +247,46 @@ class Admin extends Component {
     });
   }
 
+  handlePunchedInTimeChange(event, date) {
+    this.setState({
+      punched_in: date
+    });
+  }
+
+  handlePunchedOutTimeChange(event, date) {
+    this.setState({
+      punched_out: date
+    });
+  }
+
+  openDialog(row) {
+    this.setState({ openDialog: true, selectedUser: this.state.users[row] });
+  }
+
+  updateTimeClock() {
+    axios
+      .put(`${serverAddress}/singleTimeClock`, {
+        timeClockID: this.state.timeClockID,
+        punched_in: this.state.punched_in,
+        punched_out: this.state.punched_out
+      })
+      .then(() => this.closeDialog());
+  }
+
+  closeDialog() {
+    this.setState({ openDialog: false });
+  }
+
   render() {
     const csvHeaders = [
       { label: 'Name', key: 'employee' },
       { label: 'Hours', key: 'hours' },
       { label: 'Minutes', key: 'minutes' }
+    ];
+
+    const actions = [
+      <FlatButton label="Close" primary onClick={this.closeDialog} />,
+      <FlatButton label="Save" primary onClick={this.updateTimeClock} />
     ];
 
     return (
@@ -228,7 +304,7 @@ class Admin extends Component {
           onRequestClose={this.handleRequestCloseNewUser}
         />
         <LandingHeader>
-          <h1 style={{ marginLeft: '15px' }}>Creekside Lawn & Landscape</h1>
+          <h1 style={{ marginLeft: '15px' }}>Creekside</h1>
           <Link to="/">
             <RaisedButton style={{ marginRight: '15px' }}>Home</RaisedButton>
           </Link>
@@ -316,7 +392,7 @@ class Admin extends Component {
               </Table>
             </div>
           </Tab>
-          <Tab label="Manage Users">
+          <Tab label="Add User">
             <div
               style={{
                 display: 'flex',
@@ -355,6 +431,88 @@ class Admin extends Component {
                 Submit
               </RaisedButton>
             </div>
+          </Tab>
+          <Tab label="Manage Users">
+            <div
+              style={{
+                marginTop: '10px'
+              }}>
+              <Table
+                onCellClick={(row, column) => {
+                  switch (column) {
+                    case 0:
+                      console.log('Edit');
+                      break;
+                    case 3:
+                      console.log('Delete');
+                      break;
+                    default:
+                      this.openDialog(row);
+                  }
+                }}
+                style={{ width: '80%', margin: '0 auto' }}>
+                <TableHeader adjustForCheckbox={false} displaySelectAll={false}>
+                  <TableRow>
+                    <TableHeaderColumn style={{ width: '50px' }} />
+                    <TableHeaderColumn>Name</TableHeaderColumn>
+                    <TableHeaderColumn>Email</TableHeaderColumn>
+                    <TableHeaderColumn style={{ width: '50px' }} />
+                  </TableRow>
+                </TableHeader>
+                <TableBody
+                  deselectOnClickaway={false}
+                  displayRowCheckbox={false}>
+                  {this.state.users.map(user => (
+                    <TableRow key={user._id}>
+                      <TableRowColumn style={{ width: '50px' }}>
+                        <Edit />
+                      </TableRowColumn>
+                      <TableRowColumn>{`${user.first_name} ${
+                        user.last_name
+                      }`}</TableRowColumn>
+                      <TableRowColumn>{user.email}</TableRowColumn>
+                      <TableRowColumn style={{ width: '50px' }}>
+                        <Delete />
+                      </TableRowColumn>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+            {this.state.selectedUser && (
+              <Dialog
+                title={`Edit Time Clock for ${
+                  this.state.selectedUser.first_name
+                } ${this.state.selectedUser.last_name}`}
+                actions={actions}
+                modal
+                open={this.state.openDialog}>
+                <DatePicker
+                  hintText="Select Date to Edit"
+                  inputStyle={{ color: 'black' }}
+                  hintStyle={{ color: 'black' }}
+                  value={this.state.employeeEditDate}
+                  onChange={this.handleEmployeeEditDateChange}
+                />
+                <div
+                  style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <TimePicker
+                    format="ampm"
+                    hintText="Punched In"
+                    defaultTime={this.state.punched_in}
+                    value={this.state.punched_in}
+                    onChange={this.handlePunchedInTimeChange}
+                  />
+                  <TimePicker
+                    format="ampm"
+                    hintText="Punched Out"
+                    defaultTime={this.state.punched_out}
+                    value={this.state.punched_out}
+                    onChange={this.handlePunchedOutTimeChange}
+                  />
+                </div>
+              </Dialog>
+            )}
           </Tab>
         </Tabs>
       </div>

@@ -7,15 +7,15 @@ import App from './App';
 
 const muiTheme = getMuiTheme({
   datePicker: {
-    headerColor: '#1b5e20',
-    selectColor: '#1b5e20',
-    color: '#1b5e20'
+    headerColor: '#630012',
+    selectColor: '#630012',
+    color: '#630012'
   },
   flatButton: {
-    primaryTextColor: '#1b5e20'
+    primaryTextColor: '#630012'
   },
   checkbox: {
-    checkedColor: '#1b5e20'
+    checkedColor: '#630012'
   },
   tabs: {
     backgroundColor: '#4C5B61',

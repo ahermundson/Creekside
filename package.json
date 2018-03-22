@@ -6,8 +6,10 @@
     "build": "webpack --config webpack.prod.js",
     "dev": "webpack-dev-server --config webpack.dev.js",
     "server": "nodemon ./server/server.js",
-    "start": "concurrently --kill-others-on-fail \"npm run server\" \"npm run dev\"",
-    "format": "prettier --write --single-quote --print-width=120 --parser=flow --tab-width=2 \"js/**/*.{js,jsx}\""
+    "start":
+      "concurrently --kill-others-on-fail \"npm run server\" \"npm run dev\"",
+    "format":
+      "prettier --write --single-quote --print-width=120 --parser=flow --tab-width=2 \"js/**/*.{js,jsx}\""
   },
   "author": "",
   "license": "ISC",

@@ -8,7 +8,7 @@ module.exports = {
   devtool: 'source-map',
   output: {
     path: path.resolve(__dirname, 'production'),
-    filename: 'bundle.js'
+    filename: 'bundle3.js'
   },
   resolve: {
     extensions: ['.js', '.jsx', '.json']

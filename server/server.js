@@ -6,7 +6,8 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
-// const cors = require('cors');
+const cors = require('cors');
+const moment = require('moment');
 
 // const User = require('./models/user-model');
 const JobClock = require('./models/jobclock-model');
@@ -24,13 +25,14 @@ app.use(bodyParser.json());
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// const corsOptions = {
-//   origin: 'http://creeksidelawnandlandscape.s3-website.us-east-2.amazonaws.com',
-//   credentials: true
-// };
+const corsOptions = {
+  origin: 'http://creeksidelawnandlandscape.s3-website.us-east-2.amazonaws.com',
+  credentials: true,
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE'
+};
 
-// app.options('*', cors(corsOptions));
-// app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
+app.use(cors(corsOptions));
 
 app.get('/user', (req, res) => {
   if (req.query.email) {
@@ -127,7 +129,6 @@ app.put('/timeClockUpdate', (req, res) => {
 });
 
 app.post('/jobclock', (req, res) => {
-  console.log(req.body);
   const jobClockToAdd = new JobClock({
     job_started: req.body.job_started,
     user_id: req.body.user_id,
@@ -161,7 +162,6 @@ app.put('/jobClockUpdate', (req, res) => {
 });
 
 app.get('/allUserTimeClock', (req, res) => {
-  console.log(req.headers);
   const decoded = jwt.verify(
     req.headers.authorization,
     Buffer.from(process.env.AUTH_SECRET),
@@ -187,6 +187,57 @@ app.get('/allUserTimeClock', (req, res) => {
   } else {
     res.sendStatus(500);
   }
+});
+
+app.get('/employeeHours', (req, res) => {
+  TimeClock.find({
+    user_id: req.query.user_id,
+    punched_out: { $gte: req.query.startDate, $lte: req.query.endDate }
+  }).exec((err, data) => {
+    if (!err) {
+      res.send(data);
+    } else {
+      res.sendStatus(500);
+    }
+  });
+});
+
+app.get('/singleTimeClock', (req, res) => {
+  const start = moment(req.query.date).startOf('day');
+  const end = moment(start).add(1, 'days');
+  TimeClock.find({
+    user_id: req.query.userId,
+    punched_in: {
+      $gte: moment(start).format(),
+      $lt: moment(end).format()
+    }
+  }).exec((err, data) => {
+    if (!err) {
+      res.send(data);
+    } else {
+      res.sendStatus(500);
+    }
+  });
+});
+
+app.put('/singleTimeClock', (req, res) => {
+  TimeClock.findOneAndUpdate(
+    { _id: req.body.timeClockID },
+    {
+      $set: {
+        punched_in: req.body.punched_in,
+        punched_out: req.body.punched_out
+      }
+    },
+    err => {
+      if (err) {
+        console.log('Put ERR: ', err);
+        res.sendStatus(500);
+      } else {
+        res.sendStatus(200);
+      }
+    }
+  );
 });
 
 app.listen(3001, () => console.log('Example app listening on port 3001!'));
