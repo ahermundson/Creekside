@@ -17,7 +17,9 @@
     "dotenv": "^5.0.0",
     "express": "^4.16.2",
     "jsonwebtoken": "^8.1.1",
+    "jwk-to-pem": "^2.0.0",
     "moment": "^2.21.0",
-    "mongoose": "^5.0.3"
+    "mongoose": "^5.0.3",
+    "request": "^2.85.0"
   }
 }

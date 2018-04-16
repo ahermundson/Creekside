@@ -11,18 +11,19 @@ import {
   FINISH_JOB
 } from './actions';
 
-// const serverAddress =
-//   'http://helloworld-hermundson.us-east-2.elasticbeanstalk.com';
-const serverAddress = '/api';
+const serverAddress =
+  process.env.NODE_ENV === 'dev'
+    ? '/api'
+    : 'http://helloworld-hermundson.us-east-2.elasticbeanstalk.com';
 
 export function addUserInfo(userData) {
   return { type: ADD_USER_INFO, payload: userData };
 }
 
-export function getUserInfo(email) {
+export function getUserInfo(username) {
   return dispatch => {
     axios
-      .get(`${serverAddress}/user?email=${email}`)
+      .get(`${serverAddress}/user?username=${username}`)
       .then(response => {
         if (response.data.length) {
           dispatch(addUserInfo(response.data[0]));

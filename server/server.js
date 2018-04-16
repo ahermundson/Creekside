@@ -9,12 +9,20 @@ const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const moment = require('moment');
 
-// const User = require('./models/user-model');
 const JobClock = require('./models/jobclock-model');
 const TimeClock = require('./models/timeclock-model');
 const Location = require('./models/location-model');
 const User = require('./models/user-model');
 const mongoConnection = require('./modules/mongo-connection');
+const auth = require('./AuthUtil/AuthUtil');
+
+// Collect Cognito auth information
+let authPems = {};
+const successPemCallback = pems => {
+  authPems = pems;
+};
+const errorPemCallback = () => console.log('Error in getting auth pems');
+auth.createPems(successPemCallback, errorPemCallback);
 
 const app = express();
 
@@ -35,8 +43,8 @@ app.options('*', cors(corsOptions));
 app.use(cors(corsOptions));
 
 app.get('/user', (req, res) => {
-  if (req.query.email) {
-    User.find({ email: req.query.email }).exec((err, data) => {
+  if (req.query.username) {
+    User.find({ username: req.query.username }).exec((err, data) => {
       if (!err) {
         res.send(data);
       } else {
@@ -55,19 +63,28 @@ app.get('/user', (req, res) => {
 });
 
 app.post('/user', (req, res) => {
-  const userToAdd = new User({
-    email: req.body.newUser.email,
-    first_name: req.body.newUser.first_name,
-    last_name: req.body.newUser.last_name,
-    isAdmin: false
-  });
+  auth.validateToken(authPems, req.headers.authorization).then(response => {
+    if (response) {
+      const isAdmin =
+        response.payload['cognito:groups'] &&
+        response.payload['cognito:groups'].includes('Admin');
+      const userToAdd = new User({
+        username: req.body.username,
+        first_name: req.body.first_name,
+        last_name: req.body.last_name,
+        isAdmin
+      });
 
-  userToAdd.save((err, data) => {
-    if (err) {
-      console.log('Error: ', err);
-      res.sendStatus(500);
+      userToAdd.save((err, data) => {
+        if (err) {
+          console.log('Error: ', err);
+          res.sendStatus(500);
+        } else {
+          res.send(data);
+        }
+      });
     } else {
-      res.send(data);
+      console.log('Error');
     }
   });
 });
@@ -240,4 +257,5 @@ app.put('/singleTimeClock', (req, res) => {
   );
 });
 
+// 8081 for AWS
 app.listen(3001, () => console.log('Example app listening on port 3001!'));

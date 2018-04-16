@@ -4,18 +4,17 @@
   "main": "webpack.config.js",
   "scripts": {
     "build": "webpack --config webpack.prod.js",
-    "dev": "webpack-dev-server --config webpack.dev.js",
+    "dev": "NODE_ENV=dev webpack-dev-server --config webpack.dev.js",
     "server": "nodemon ./server/server.js",
-    "start":
-      "concurrently --kill-others-on-fail \"npm run server\" \"npm run dev\"",
-    "format":
-      "prettier --write --single-quote --print-width=120 --parser=flow --tab-width=2 \"js/**/*.{js,jsx}\""
+    "start": "concurrently --kill-others-on-fail \"npm run server\" \"npm run dev\"",
+    "format": "prettier --write --single-quote --print-width=120 --parser=flow --tab-width=2 \"js/**/*.{js,jsx}\""
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "auth0-js": "^9.2.2",
     "auth0-lock": "^11.2.3",
+    "aws-amplify": "0.2.11",
     "axios": "^0.17.1",
     "babel-plugin-transform-object-rest-spread": "^6.26.0",
     "dotenv": "^5.0.0",

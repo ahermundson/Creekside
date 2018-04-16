@@ -4,11 +4,11 @@ const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 const Dotenv = require('dotenv-webpack');
 
 module.exports = {
-  entry: ['./ClientApp.jsx'],
+  entry: ['./Components/ClientApp.jsx'],
   devtool: 'source-map',
   output: {
     path: path.resolve(__dirname, 'production'),
-    filename: 'bundle3.js'
+    filename: 'bundle6.js'
   },
   resolve: {
     extensions: ['.js', '.jsx', '.json']

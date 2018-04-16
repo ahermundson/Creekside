@@ -7,7 +7,8 @@ const userSchema = new Schema(
     first_name: { type: String },
     last_name: { type: String },
     email: { type: String },
-    isAdmin: { type: Boolean }
+    isAdmin: { type: Boolean },
+    username: {type: String}
   },
   { collection: 'Users' }
 );
