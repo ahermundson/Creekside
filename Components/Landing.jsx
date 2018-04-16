@@ -3,7 +3,6 @@ import { isEmpty } from 'lodash';
 import styled from 'styled-components';
 import RaisedButton from 'material-ui/RaisedButton';
 import MenuItem from 'material-ui/MenuItem';
-
 import { Tabs, Tab } from 'material-ui/Tabs';
 import TextField from 'material-ui/TextField';
 import AccessTime from 'material-ui/svg-icons/device/access-time';
@@ -13,7 +12,8 @@ import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { Auth } from 'aws-amplify';
-import { getUserInfo, punchIn } from '../redux/actionCreators';
+import { RotatingPlane } from 'better-react-spinkit';
+import { getUserInfo, punchIn, toggleLoader } from '../redux/actionCreators';
 
 import TimeClock from './TimeClock';
 import SingleEmployeeTimeClockReport from './SingleEmployeeTimeClockReport';
@@ -28,7 +28,7 @@ const LandingContainer = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  margin: 15% auto;
+  margin: 5% auto;
   height: 100%;
   background-color: rgba(128, 128, 128, 0.8);
   border: 5px solid white;
@@ -114,10 +114,11 @@ class Landing extends Component {
 
   componentDidMount() {
     Auth.currentSession()
-      .then(session =>
-        this.props.getUserInfo(session.accessToken.payload.username)
-      )
-      .catch(err => console.log(err));
+      .then(session => {
+        this.props.getUserInfo(session.accessToken.payload.username);
+        this.props.toggleLoader();
+      })
+      .catch(() => this.props.toggleLoader());
 
     axios.get(`${serverAddress}/location`).then(response => {
       const locationMenuItems = response.data.map(location => (
@@ -127,6 +128,7 @@ class Landing extends Component {
           primaryText={`${location.type} - ${location.propertyName}`}
         />
       ));
+
       this.setState({
         locationMenuItems
       });
@@ -134,6 +136,7 @@ class Landing extends Component {
   }
 
   onPunchInClick = () => {
+    this.props.toggleLoader();
     this.props.punchIn(
       this.props.userInfo._id,
       new Date(),
@@ -142,6 +145,7 @@ class Landing extends Component {
   };
 
   onLoginClick = () => {
+    this.props.toggleLoader();
     const { username, password } = this.state;
     Auth.signIn(username, password)
       .then(user => {
@@ -149,6 +153,7 @@ class Landing extends Component {
           user.challengeName &&
           user.challengeName === 'NEW_PASSWORD_REQUIRED'
         ) {
+          this.props.toggleLoader();
           this.setState({
             showUpdatePassword: true,
             cognitoUser: user,
@@ -355,67 +360,80 @@ class Landing extends Component {
             </Link>
           )}
         </FullLandingHeader>
-        <Tabs
-          tabItemContainerStyle={{
-            height: '100%'
-          }}
-          contentContainerStyle={{
-            height: '100%'
-          }}
-        >
-          <Tab icon={<AccessTime />}>
-            <LandingContainer>
-              {!this.props.userInfo.isAuthenticated && loginScreen}
-              {!this.props.activeTimeClock &&
-                this.props.userInfo.isAuthenticated && (
-                  <div
-                    style={{
-                      width: '100%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center'
-                    }}
-                  >
-                    <h3
+        {this.props.isLoading ? (
+          <div
+            style={{
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <RotatingPlane size={100} color="white" />
+          </div>
+        ) : (
+          <Tabs
+            tabItemContainerStyle={{
+              height: '100%'
+            }}
+            contentContainerStyle={{
+              height: '100%'
+            }}
+          >
+            <Tab icon={<AccessTime />}>
+              <LandingContainer>
+                {!this.props.userInfo.isAuthenticated && loginScreen}
+                {!this.props.activeTimeClock &&
+                  this.props.userInfo.isAuthenticated && (
+                    <div
                       style={{
-                        color: 'white',
-                        fontFamily: 'Roboto, sans-serif'
+                        width: '100%',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center'
                       }}
                     >
-                      {`Welcome ${this.props.userInfo.first_name} ${
-                        this.props.userInfo.last_name
-                      }`}
-                    </h3>
-                    <RaisedButton
-                      label="Punch In"
-                      style={styles.main}
-                      buttonStyle={styles.button}
-                      labelStyle={styles.buttonLabel}
-                      onClick={this.onPunchInClick}
+                      <h3
+                        style={{
+                          color: 'white',
+                          fontFamily: 'Roboto, sans-serif'
+                        }}
+                      >
+                        {`Welcome ${this.props.userInfo.first_name} ${
+                          this.props.userInfo.last_name
+                        }`}
+                      </h3>
+                      <RaisedButton
+                        label="Punch In"
+                        style={styles.main}
+                        buttonStyle={styles.button}
+                        labelStyle={styles.buttonLabel}
+                        onClick={this.onPunchInClick}
+                      />
+                    </div>
+                  )}
+                {this.props.activeTimeClock &&
+                  this.props.userInfo.isAuthenticated && (
+                    <TimeClock
+                      locationMenuItems={this.state.locationMenuItems}
+                      handleLocationChange={this.handleLocationChange}
+                      selectedLocation={this.state.selectedLocation}
                     />
-                  </div>
-                )}
-              {this.props.activeTimeClock &&
-                this.props.userInfo.isAuthenticated && (
-                  <TimeClock
-                    locationMenuItems={this.state.locationMenuItems}
-                    handleLocationChange={this.handleLocationChange}
-                    selectedLocation={this.state.selectedLocation}
-                  />
-                )}
-            </LandingContainer>
-          </Tab>
-          <Tab icon={<Money />}>
-            <SingleEmployeeTimeClockReport
-              startDate={this.state.startDate}
-              endDate={this.state.endDate}
-              handleStartDateChange={this.handleStartDateChange}
-              handleEndDateChange={this.handleEndDateChange}
-              getEmployeeHourData={this.getEmployeeHourData}
-              employeeHoursData={this.state.employeeHoursData}
-            />
-          </Tab>
-        </Tabs>
+                  )}
+              </LandingContainer>
+            </Tab>
+            <Tab icon={<Money />}>
+              <SingleEmployeeTimeClockReport
+                startDate={this.state.startDate}
+                endDate={this.state.endDate}
+                handleStartDateChange={this.handleStartDateChange}
+                handleEndDateChange={this.handleEndDateChange}
+                getEmployeeHourData={this.getEmployeeHourData}
+                employeeHoursData={this.state.employeeHoursData}
+              />
+            </Tab>
+          </Tabs>
+        )}
       </div>
     );
   }
@@ -426,7 +444,8 @@ const mapStateToProps = state => ({
   activeTimeClock: !isEmpty(
     state.timeClock.find(timeClock => timeClock.activeTimeClock)
   ),
-  activeJob: !isEmpty(state.jobClock.find(jobClock => jobClock.activeJob))
+  activeJob: !isEmpty(state.jobClock.find(jobClock => jobClock.activeJob)),
+  isLoading: state.isLoading
 });
 
 const mapDispatchToProps = dispatch => ({
@@ -435,6 +454,9 @@ const mapDispatchToProps = dispatch => ({
   },
   punchIn(userId, time, location) {
     dispatch(punchIn(userId, time, location));
+  },
+  toggleLoader() {
+    dispatch(toggleLoader());
   }
 });
 
@@ -451,7 +473,9 @@ Landing.propTypes = {
     isAdmin: PropTypes.bool,
     isAuthenticated: PropTypes.bool
   }),
-  activeTimeClock: PropTypes.bool
+  activeTimeClock: PropTypes.bool,
+  isLoading: PropTypes.bool.isRequired,
+  toggleLoader: PropTypes.func.isRequired
 };
 
 Landing.defaultProps = {

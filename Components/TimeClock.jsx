@@ -5,7 +5,12 @@ import { connect } from 'react-redux';
 import { isEmpty } from 'lodash';
 import PropTypes from 'prop-types';
 
-import { punchOut, startJob, finishJob } from '../redux/actionCreators';
+import {
+  punchOut,
+  startJob,
+  finishJob,
+  toggleLoader
+} from '../redux/actionCreators';
 
 const styles = {
   main: {
@@ -30,77 +35,75 @@ const styles = {
   }
 };
 
-const onPunchOutClick = () => {
-  this.props.punchOut(this.props.userInfo._id);
-};
+const TimeClock = props => {
+  const onPunchOutClick = () => {
+    props.punchOut(props.userInfo._id);
+  };
 
-const onStartJobClick = () => {
-  this.props.startJob(
-    this.props.userInfo._id,
-    new Date(),
-    this.state.selectedLocation
-  );
-  this.setState({
-    selectedLocation: null
-  });
-};
+  const onStartJobClick = () => {
+    props.startJob(props.userInfo._id, new Date(), this.state.selectedLocation);
+    this.setState({
+      selectedLocation: null
+    });
+  };
 
-const onFinishJobClick = () => {
-  this.props.finishJob(this.props.userInfo._id);
-};
+  const onFinishJobClick = () => {
+    props.finishJob(props.userInfo._id);
+  };
 
-const TimeClock = props => (
-  <div
-    style={{
-      width: '100%',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center'
-    }}
-  >
-    <h3
+  return (
+    <div
       style={{
-        color: 'white',
-        fontFamily: 'Roboto, sans-serif'
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center'
       }}
-    >{`Welcome ${props.userInfo.first_name} ${props.userInfo.last_name}`}</h3>
-    <SelectField
-      disabled={props.activeJob}
-      labelStyle={{ color: 'white' }}
-      selectedMenuItemStyle={{ color: 'tan' }}
-      value={props.selectedLocation}
-      floatingLabelText="Select Job Location"
-      floatingLabelStyle={{ color: 'white' }}
-      onChange={props.handleLocationChange}
     >
-      {props.locationMenuItems}
-    </SelectField>
-    {!props.activeJob ? (
+      <h3
+        style={{
+          color: 'white',
+          fontFamily: 'Roboto, sans-serif'
+        }}
+      >{`Welcome ${props.userInfo.first_name} ${props.userInfo.last_name}`}</h3>
+      <SelectField
+        disabled={props.activeJob}
+        labelStyle={{ color: 'white' }}
+        selectedMenuItemStyle={{ color: 'tan' }}
+        value={props.selectedLocation}
+        floatingLabelText="Select Job Location"
+        floatingLabelStyle={{ color: 'white' }}
+        onChange={props.handleLocationChange}
+      >
+        {props.locationMenuItems}
+      </SelectField>
+      {!props.activeJob ? (
+        <RaisedButton
+          label="Start Job"
+          style={styles.main}
+          buttonStyle={styles.button}
+          labelStyle={styles.buttonLabel}
+          onClick={onStartJobClick}
+        />
+      ) : (
+        <RaisedButton
+          label="Finish Job"
+          style={styles.main}
+          buttonStyle={styles.button}
+          labelStyle={styles.buttonLabel}
+          onClick={onFinishJobClick}
+        />
+      )}
       <RaisedButton
-        label="Start Job"
+        label="Punch Out"
         style={styles.main}
         buttonStyle={styles.button}
         labelStyle={styles.buttonLabel}
-        onClick={onStartJobClick}
+        onClick={onPunchOutClick}
       />
-    ) : (
-      <RaisedButton
-        label="Finish Job"
-        style={styles.main}
-        buttonStyle={styles.button}
-        labelStyle={styles.buttonLabel}
-        onClick={onFinishJobClick}
-      />
-    )}
-    <RaisedButton
-      label="Punch Out"
-      style={styles.main}
-      buttonStyle={styles.button}
-      labelStyle={styles.buttonLabel}
-      onClick={onPunchOutClick}
-    />
-  </div>
-);
+    </div>
+  );
+};
 
 const mapStateToProps = state => ({
   userInfo: state.userInfo,
@@ -119,6 +122,9 @@ const mapDispatchToProps = dispatch => ({
   },
   finishJob(userId) {
     dispatch(finishJob(userId));
+  },
+  toggleLoader() {
+    dispatch(toggleLoader());
   }
 });
 
@@ -136,20 +142,15 @@ TimeClock.propTypes = {
   activeJob: PropTypes.bool,
   selectedLocation: PropTypes.string,
   handleLocationChange: PropTypes.func.isRequired,
-  locationMenuItems: PropTypes.arrayOf(
-    PropTypes.shape({
-      _id: PropTypes.string,
-      type: PropTypes.string,
-      propertyName: PropTypes.string,
-      streetAddress: PropTypes.string,
-      city: PropTypes.string,
-      zip: PropTypes.string
-    })
-  ).isRequired
+  locationMenuItems: PropTypes.arrayOf(PropTypes.element),
+  punchOut: PropTypes.func.isRequired,
+  startJob: PropTypes.func.isRequired,
+  finishJob: PropTypes.func.isRequired
 };
 
 TimeClock.defaultProps = {
   userInfo: {},
   activeJob: false,
-  selectedLocation: null
+  selectedLocation: null,
+  locationMenuItems: null
 };

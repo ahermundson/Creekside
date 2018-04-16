@@ -5,8 +5,16 @@ import {
   PUNCH_OUT,
   SET_USER_TIMECLOCK,
   START_JOB,
-  FINISH_JOB
+  FINISH_JOB,
+  TOGGLE_LOADER
 } from './actions';
+
+const loader = (state = true, action) => {
+  if (action.type === TOGGLE_LOADER) {
+    return !state;
+  }
+  return state;
+};
 
 const userInfo = (state = {}, action) => {
   if (action.type === ADD_USER_INFO) {
@@ -86,6 +94,6 @@ const jobClock = (state = [], action) => {
   }
 };
 
-const rootReducer = combineReducers({ userInfo, timeClock, jobClock });
+const rootReducer = combineReducers({ userInfo, timeClock, jobClock, loader });
 
 export default rootReducer;

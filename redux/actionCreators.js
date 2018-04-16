@@ -8,7 +8,8 @@ import {
   SET_USER_TIMECLOCK,
   GET_USER_TIMECLOCK_DATA,
   START_JOB,
-  FINISH_JOB
+  FINISH_JOB,
+  TOGGLE_LOADER
 } from './actions';
 
 const serverAddress =
@@ -29,6 +30,7 @@ export function getUserInfo(username) {
           dispatch(addUserInfo(response.data[0]));
           dispatch(getUserTimeClock(response.data[0]._id));
         } else {
+          dispatch(toggleLoader());
           console.log('No User Info available');
         }
       })
@@ -178,7 +180,20 @@ function getUserTimeClock(userId) {
     axios.get(`${serverAddress}/timeClock?userId=${userId}`).then(response => {
       if (response.data.length) {
         dispatch(setUserTimeClock(response.data[0]));
+        dispatch(toggleLoader());
       }
     });
+  };
+}
+
+function toggleLoaderDispatch() {
+  return {
+    type: TOGGLE_LOADER
+  };
+}
+
+export function toggleLoader() {
+  return dispatch => {
+    dispatch(toggleLoaderDispatch());
   };
 }
