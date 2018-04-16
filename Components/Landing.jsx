@@ -9,7 +9,6 @@ import AccessTime from 'material-ui/svg-icons/device/access-time';
 import Money from 'material-ui/svg-icons/editor/attach-money';
 import axios from 'axios';
 import { connect } from 'react-redux';
-import { Link } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { Auth } from 'aws-amplify';
 import { RotatingPlane } from 'better-react-spinkit';
@@ -37,38 +36,6 @@ const LandingContainer = styled.div`
   @media (max-width: 700px) {
     width: 85%;
     margin-top: 10%;
-  }
-`;
-
-const LandingHeader = styled.div`
-  @media (min-width: 700px) {
-    display: none;
-  }
-
-  @media (max-width: 700px) {
-    background-color: #630012;
-    width: 100%;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-family: Roboto, sans-serif;
-    height: 10%;
-  }
-`;
-
-const FullLandingHeader = styled.div`
-  height: 15%;
-  background-color: #630012;
-  width: 100%;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-family: Roboto, sans-serif;
-
-  @media (max-width: 700px) {
-    display: none;
   }
 `;
 
@@ -330,36 +297,6 @@ class Landing extends Component {
 
     return (
       <div style={{ height: '80vh' }}>
-        <LandingHeader>
-          <h2
-            style={{
-              marginLeft: '15px',
-              padding: '3px 5px 3px 5px',
-              border: '1px solid white'
-            }}
-          >
-            C
-          </h2>
-          {this.props.userInfo.isAdmin && (
-            <Link to="/admin">
-              <RaisedButton style={{ marginRight: '15px' }}>Admin</RaisedButton>
-            </Link>
-          )}
-        </LandingHeader>
-        <FullLandingHeader>
-          <h2
-            style={{
-              marginLeft: '15px'
-            }}
-          >
-            Creekside L & L
-          </h2>
-          {this.props.userInfo.isAdmin && (
-            <Link to="/admin">
-              <RaisedButton style={{ marginRight: '15px' }}>Admin</RaisedButton>
-            </Link>
-          )}
-        </FullLandingHeader>
         {this.props.isLoading ? (
           <div
             style={{

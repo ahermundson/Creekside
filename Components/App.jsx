@@ -4,13 +4,17 @@ import { Provider } from 'react-redux';
 import store from '../redux/store';
 import Landing from './Landing';
 import Admin from './Admin';
+import Header from './Header';
 
 const App = () => (
   <Provider store={store}>
-    <Switch>
-      <Route exact path="/" component={Landing} />
-      <Route path="/admin" component={Admin} />
-    </Switch>
+    <div style={{ height: '100vh' }}>
+      <Header />
+      <Switch>
+        <Route exact path="/" component={Landing} />
+        <Route path="/admin" component={Admin} />
+      </Switch>
+    </div>
   </Provider>
 );
 

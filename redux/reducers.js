@@ -9,7 +9,7 @@ import {
   TOGGLE_LOADER
 } from './actions';
 
-const loader = (state = true, action) => {
+const isLoading = (state = false, action) => {
   if (action.type === TOGGLE_LOADER) {
     return !state;
   }
@@ -94,6 +94,11 @@ const jobClock = (state = [], action) => {
   }
 };
 
-const rootReducer = combineReducers({ userInfo, timeClock, jobClock, loader });
+const rootReducer = combineReducers({
+  userInfo,
+  timeClock,
+  jobClock,
+  isLoading
+});
 
 export default rootReducer;
