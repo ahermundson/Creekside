@@ -27,21 +27,21 @@ const ManageUsers = props => {
       <div
         style={{
           marginTop: '10px'
-        }}>
+        }}
+      >
         <Table
           onCellClick={(row, column) => {
             switch (column) {
               case 0:
-                console.log('Edit');
                 break;
               case 3:
-                console.log('Delete');
                 break;
               default:
                 props.openDialog(row);
             }
           }}
-          style={{ width: '80%', margin: '0 auto' }}>
+          style={{ width: '80%', margin: '0 auto' }}
+        >
           <TableHeader adjustForCheckbox={false} displaySelectAll={false}>
             <TableRow>
               <TableHeaderColumn style={{ width: '50px' }} />
@@ -75,7 +75,8 @@ const ManageUsers = props => {
           }`}
           actions={actions}
           modal
-          open={props.isDialogOpen}>
+          open={props.isDialogOpen}
+        >
           <DatePicker
             hintText="Select Date to Edit"
             inputStyle={{ color: 'black' }}

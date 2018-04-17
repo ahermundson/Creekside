@@ -4,7 +4,6 @@ import styled from 'styled-components';
 import RaisedButton from 'material-ui/RaisedButton';
 import MenuItem from 'material-ui/MenuItem';
 import { Tabs, Tab } from 'material-ui/Tabs';
-import TextField from 'material-ui/TextField';
 import AccessTime from 'material-ui/svg-icons/device/access-time';
 import Money from 'material-ui/svg-icons/editor/attach-money';
 import axios from 'axios';
@@ -15,6 +14,7 @@ import { RotatingPlane } from 'better-react-spinkit';
 import { getUserInfo, punchIn, toggleLoader } from '../redux/actionCreators';
 
 import TimeClock from './TimeClock';
+import LoginScreen from './LoginScreen';
 import SingleEmployeeTimeClockReport from './SingleEmployeeTimeClockReport';
 
 const serverAddress =
@@ -154,7 +154,7 @@ class Landing extends Component {
           )
           .then(() => this.props.getUserInfo(this.state.username));
       })
-      .catch(err => console.log('Error', err));
+      .catch(err => this.setState({ updatePasswordError: err.message }));
   };
 
   getEmployeeHourData = () => {
@@ -218,83 +218,6 @@ class Landing extends Component {
   };
 
   render() {
-    let loginScreen;
-    if (!this.state.showUpdatePassword) {
-      loginScreen = (
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center'
-          }}
-        >
-          <span>{this.state.loginErrorMessage}</span>
-          <TextField
-            inputStyle={{ color: 'white' }}
-            hintText="Username"
-            onChange={this.handleUsernameChange}
-            value={this.state.username}
-          />
-          <TextField
-            inputStyle={{ color: 'white' }}
-            hintText="Password"
-            type="password"
-            onChange={this.handlePasswordChange}
-            value={this.state.password}
-          />
-          <RaisedButton
-            label="Login"
-            style={styles.main}
-            buttonStyle={styles.button}
-            labelStyle={styles.buttonLabel}
-            onClick={this.onLoginClick}
-          />
-        </div>
-      );
-    } else {
-      loginScreen = (
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center'
-          }}
-        >
-          <span style={{ color: 'white', fontFamily: 'Roboto, sans-serif' }}>
-            Please fill in the following fields to finish creating your account.
-          </span>
-          <TextField
-            hintText="First Name"
-            inputStyle={{ color: 'white' }}
-            onChange={this.handleFirstNameChange}
-            value={this.state.newEmployeeFirstName}
-          />
-          <TextField
-            hintText="Last Name"
-            inputStyle={{ color: 'white' }}
-            onChange={this.handleLastNameChange}
-            value={this.state.newEmployeeLastName}
-          />
-          <TextField
-            hintText="New Password"
-            inputStyle={{ color: 'white' }}
-            type="password"
-            onChange={this.handleNewPasswordChange}
-            value={this.state.newPassword}
-          />
-          <RaisedButton
-            label="Submit"
-            style={styles.main}
-            buttonStyle={styles.button}
-            labelStyle={styles.buttonLabel}
-            onClick={this.onUpdatePasswordClick}
-          />
-        </div>
-      );
-    }
-
     return (
       <div style={{ height: '80vh' }}>
         {this.props.isLoading ? (
@@ -319,7 +242,25 @@ class Landing extends Component {
           >
             <Tab icon={<AccessTime />}>
               <LandingContainer>
-                {!this.props.userInfo.isAuthenticated && loginScreen}
+                {!this.props.userInfo.isAuthenticated && (
+                  <LoginScreen
+                    loginErrorMessage={this.state.loginErrorMessage}
+                    handleUsernameChange={this.handleUsernameChange}
+                    handlePasswordChange={this.handlePasswordChange}
+                    handleFirstNameChange={this.handleFirstNameChange}
+                    handleLastNameChange={this.handleLastNameChange}
+                    newEmployeeLastName={this.state.newEmployeeLastName}
+                    newEmployeeFirstName={this.state.newEmployeeFirstName}
+                    onLoginClick={this.onLoginClick}
+                    username={this.state.username}
+                    password={this.state.password}
+                    newPassword={this.state.newPassword}
+                    showUpdatePassword={this.state.showUpdatePassword}
+                    handleNewPasswordChange={this.handleNewPasswordChange}
+                    onUpdatePasswordClick={this.onUpdatePasswordClick}
+                    updatePasswordError={this.state.updatePasswordError}
+                  />
+                )}
                 {!this.props.activeTimeClock &&
                   this.props.userInfo.isAuthenticated && (
                     <div
